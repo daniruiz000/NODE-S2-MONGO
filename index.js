@@ -8,7 +8,7 @@ const { carRouter } = require("./routes/car.routes"); //  LO IMPORTAMOS COMO UN 
 const main = async () => {
   // Conexión a la base de datos
   const { connect } = require("./db.js"); // Importamos el archivo de conexión a la BBDD
-  await connect(); //  Conectamos con la BBDD
+  const database = await connect(); //  Conectamos con la BBDD
 
   //  Configuración del server
   const PORT = 3000; //  Definimos el puerto
@@ -19,7 +19,7 @@ const main = async () => {
   //  Rutas
   const router = express.Router();
   router.get("/", (req, res) => {
-    res.send("Esta es la Home de nuestra API");
+    res.send(`Esta es la Home de nuestra API. Estamos usando la BBDD de ${database.connection.name}`);
   });
 
   // Para que todas las peticiones que no se correspondan con nuestras rutas den un codigo 404 y manden un mensaje de error.
