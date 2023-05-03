@@ -4,6 +4,9 @@ const express = require("express");
 // Importamos el modelo que nos sirve tanto para importar datos como para leerlos:
 const { User } = require("../models/User.js");
 
+// Importamos la función que nos sirve para resetear los book:
+const { resetUsers } = require("../utils/restetUsers.js");
+
 // Router propio de usuario:
 const router = express.Router();
 
@@ -117,6 +120,23 @@ router.post("/", async (req, res) => {
 /* Petición tipo de POST para añadir un nuevo usuario (añadimos al body el nuevo usuario con sus propiedades que tiene que cumplir con el Scheme de nuestro modelo) identificado por su id:
  const newUser = {firstName: "Prueba Nombre", lastName: "Prueba apellido", phone: "Prueba tlf"}
  fetch("http://localhost:3000/user/",{"body": JSON.stringify(newUser),"method":"POST","headers":{"Accept":"application/json","Content-Type":"application/json"}}).then((data)=> console.log(data)) */
+
+//  ------------------------------------------------------------------------------------------
+
+//  Endpoint para resetear los datos ejecutando cryptos:
+
+router.delete("/reset", async (req, res) => {
+  // Si funciona el reseteo...
+  try {
+    await resetUsers();
+    res.send("Datos Book reseteados");
+
+    // Si falla el reseteo...
+  } catch (error) {
+    console.error(error);
+    res.status(500).json(error); //  Devolvemos un código 500 de error si falla el reseteo de datos y el error.
+  }
+});
 
 //  ------------------------------------------------------------------------------------------
 

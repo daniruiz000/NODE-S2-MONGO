@@ -5,10 +5,10 @@ const Schema = mongoose.Schema;
 // Creamos esquema del coche
 const carSchema = new Schema(
   {
-    brand: { type: String, require: true },
-    model: { type: String, require: true },
-    plate: { type: String, require: false },
-    power: { type: Number, require: false },
+    brand: { type: String, required: true },
+    model: { type: String, required: true },
+    plate: { type: String, required: false },
+    power: { type: Number, required: false },
   },
   { timestamps: true } // Cada vez que se modifique un documento refleja la hora y fecha de modificación
 );
