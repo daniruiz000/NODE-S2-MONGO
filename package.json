@@ -5,12 +5,15 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "start:wacth": "nodemon index.js",
+    "start:watch": "nodemon index.js",
     "lint": "eslint",
     "test": "echo \"Error: no test specified\" && exit 1",
     "prepare": "husky install",
     "seed:users": "node ./seeds/user.seed.js",
-    "seed:cars": "node ./seeds/car.seed.js"
+    "seed:cars": "node ./seeds/car.seed.js",
+    "seed:brands": "node ./seeds/brand.seed.js",
+    "seed:car-relations": "node ./seeds/carRelations.seed.js",
+    "seed:all": "node ./seeds/user.seed.js && node ./seeds/car.seed.js && node ./seeds/brand.seed.js && node ./seeds/carRelations.seed.js"
   },
   "keywords": [],
   "author": "dani ruiz",

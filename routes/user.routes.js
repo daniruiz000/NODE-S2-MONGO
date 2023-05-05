@@ -3,9 +3,9 @@ const express = require("express");
 
 // Importamos el modelo que nos sirve tanto para importar datos como para leerlos:
 const { User } = require("../models/User.js");
-
+const { Car } = require("../models/Car.js");
 // Importamos la función que nos sirve para resetear los book:
-const { resetUsers } = require("../utils/restetUsers.js");
+const { resetUsers } = require("../utils/resetUsers.js");
 
 // Router propio de usuario:
 const router = express.Router();
@@ -60,8 +60,16 @@ router.get("/:id", async (req, res) => {
   try {
     const id = req.params.id; //  Recogemos el id de los parametros de la ruta.
     const user = await User.findById(id); //  Buscamos un documentos con un id determinado dentro de nuestro modelo con modelo.findById(id a buscar).
+
     if (user) {
-      res.json(user); //  Si existe el usuario lo mandamos como respuesta en modo json.
+      const temporalUser = user.toObject(); // Creamos un suario temporal que recibira sólo los datos que nos interesan del usuario que exista con ese id. Recibo sólo los datos que nos interesan con toObject().
+      const includeCars = req.query.includeCars === "true";
+
+      if (includeCars) {
+        const cars = await Car.find({ owner: id }); // Busco en la entidad Car los coches que correspondena ese id de User.
+        temporalUser.cars = cars; // Añadimos la propiedad cars al usuario temporal con los coches que hemos recogido de la entidad Car.
+      }
+      res.json(temporalUser); // Enviamos la resspuesta en formato json.
     } else {
       res.status(404).json({}); //    Si no existe el usuario se manda un json vacio y un código 400.
     }
@@ -129,7 +137,7 @@ router.delete("/reset", async (req, res) => {
   // Si funciona el reseteo...
   try {
     await resetUsers();
-    res.send("Datos Book reseteados");
+    res.send("Datos User reseteados");
 
     // Si falla el reseteo...
   } catch (error) {

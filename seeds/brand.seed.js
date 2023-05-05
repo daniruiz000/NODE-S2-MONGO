@@ -2,16 +2,15 @@
 const mongoose = require("mongoose");
 
 // Conexión a la base de datos:
-const { connect } = require("../db"); // Importamos el archivo de conexión a la BBDD
-
-// Importamos la función que nos sirve para resetear los users:
-const { resetUsers } = require("../utils/resetUsers");
+const { connect } = require("../db");
+// Importamos la función que nos sirve para resetear los car:
+const { resetBrands } = require("../utils/resetBrands");
 
 //  Función asíncrona para conectar con la BBDD y ejecutar la función de reseteo de datos.
-const seedUsers = async () => {
+const seedBrands = async () => {
   try {
     await connect(); //  Esperamos a que conecte con la BBDD.
-    await resetUsers(); //  Esperamos que ejecute la función de reseteo de users.
+    await resetBrands(); //  Esperamos que ejecute la función de reseteo de cars.
   } catch (error) {
     //  Si hay error lanzamos el error por consola.
     console(error);
@@ -21,4 +20,4 @@ const seedUsers = async () => {
   }
 };
 
-seedUsers(); //  Llamamos a la función.
+seedBrands(); //  Llamamos a la función.

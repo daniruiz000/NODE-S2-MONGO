@@ -2,17 +2,17 @@
 const express = require("express");
 
 // Importamos el modelo que nos sirve tanto para importar datos como para leerlos:
-const { Car } = require("../models/Car.js");
+const { Brand } = require("../models/Brand.js");
 
 // Importamos la función que nos sirve para resetear los book:
-const { resetCars } = require("../utils/resetCars.js");
+const { resetBrands } = require("../utils/resetBrands.js");
 
-// Router propio de car:
+// Router propio de brand:
 const router = express.Router();
 
 //  ------------------------------------------------------------------------------------------
 
-/*  Ruta para recuperar todos los cars de manera paginada en función de un limite de elementos a mostrar
+/*  Ruta para recuperar todos los brands de manera paginada en función de un limite de elementos a mostrar
 por página para no saturar al navegador (CRUD: READ):
 */
 
@@ -23,12 +23,11 @@ router.get("/", async (req, res) => {
     const page = req.query.page;
     const limit = parseInt(req.query.limit);
 
-    const cars = await Car.find() // Devolvemos los cars si funciona. Con modelo.find().
+    const brands = await Brand.find() // Devolvemos los brands si funciona. Con modelo.find().
       .limit(limit) // La función limit se ejecuta sobre el .find() y le dice que coga un número limitado de elementos, coge desde el inicio a no ser que le añadamos...
-      .skip((page - 1) * limit) // La función skip() se ejecuta sobre el .find() y se salta un número determinado de elementos y con este cálculo podemos paginar en función del limit.
-      .populate(["owner", "brand"]); // Con populate le indicamos que si recoge un id en la propiedad señalada rellene con los campos de datos que contenga ese id
-    //  Creamos una respuesta más completa con info de la API y los datos solicitados por el car:
-    const totalElements = await Car.countDocuments(); //  Esperamos aque realice el conteo del número total de elementos con modelo.countDocuments()
+      .skip((page - 1) * limit); // La función skip() se ejecuta sobre el .find() y se salta un número determinado de elementos y con este cálculo podemos paginar en función del limit. // Con populate le indicamos que si recoge un id en la propiedad señalada rellene con los campos de datos que contenga ese id
+    //  Creamos una respuesta más completa con info de la API y los datos solicitados por el brand:
+    const totalElements = await Brand.countDocuments(); //  Esperamos aque realice el conteo del número total de elementos con modelo.countDocuments()
     const totalPagesByLimit = Math.ceil(totalElements / limit); // Para saber el número total de páginas que se generan en función del limit. Math.ceil() nos elimina los decimales.
 
     // Respuesta Completa:
@@ -36,7 +35,7 @@ router.get("/", async (req, res) => {
       totalItems: totalElements,
       totalPages: totalPagesByLimit,
       currentPage: page,
-      data: cars,
+      data: brands,
     };
     // Enviamos la respuesta como un json.
     res.json(response);
@@ -53,17 +52,17 @@ router.get("/", async (req, res) => {
 
 //  ------------------------------------------------------------------------------------------
 
-//  Ruta para recuperar un car en concreto a través de su id ( modelo.findById()) (CRUD: READ):
+//  Ruta para recuperar un brand en concreto a través de su id ( modelo.findById()) (CRUD: READ):
 
 router.get("/:id", async (req, res) => {
   // Si funciona la lectura...
   try {
     const id = req.params.id; //  Recogemos el id de los parametros de la ruta.
-    const car = await Car.findById(id).populate(["owner", "brand"]); //  Buscamos un documentos con un id determinado dentro de nuestro modelo con modelo.findById(id a buscar).
-    if (car) {
-      res.json(car); //  Si existe el car lo mandamos como respuesta en modo json.
+    const brand = await Brand.findById(id); //  Buscamos un documentos con un id determinado dentro de nuestro modelo con modelo.findById(id a busbrand).
+    if (brand) {
+      res.json(brand); //  Si existe el brand lo mandamos como respuesta en modo json.
     } else {
-      res.status(404).json({}); //    Si no existe el car se manda un json vacio y un código 400.
+      res.status(404).json({}); //    Si no existe el brand se manda un json vacio y un código 400.
     }
 
     // Si falla la lectura...
@@ -73,29 +72,22 @@ router.get("/:id", async (req, res) => {
 });
 
 // Ejemplo de REQ:
-// http://localhost:3000/user/id del car a buscar
+// http://localhost:3000/user/id del brand a busbrand
 
 //  ------------------------------------------------------------------------------------------
 
-//  Ruta para buscar un car por el nombre ( modelo.findById({firstName: name})) (CRUD: Operación Custom. No es CRUD):
+//  Ruta para busbrand un brand por el nombre ( modelo.findById({firstName: name})) (CRUD: Operación Custom. No es CRUD):
 
-router.get("/brand/:brand", async (req, res) => {
-  const brand = req.params.brand;
-  console.log(brand);
+router.get("/name/:name", async (req, res) => {
+  const brandName = req.params.name;
   // Si funciona la lectura...
   try {
-    // const car = await car.find({ firstName: name }); //Si quisieramos realizar una busqueda exacta, tal y como está escrito.
-    const car = await Car.find({})
-      .populate({
-        path: "brand",
-        match: { name: { $regex: new RegExp("^" + brand.toLowerCase(), "i") } },
-      })
-      .populate("owner");
-
-    if (car?.length) {
-      res.json(car); //  Si existe el car lo mandamos en la respuesta como un json.
+    // const brand = await brand.find({ firstName: name }); //Si quisieramos realizar una busqueda exacta, tal y como está escrito.
+    const brand = await Brand.find({ name: new RegExp("^" + brandName.toLowerCase(), "i") }); //  Esperamos a que realice una busqueda en la que coincida el texto pasado por query params para la propiedad determinada pasada dentro de un objeto, porqué tenemos que pasar un objeto, sin importar mayusc o minusc.
+    if (brand?.length) {
+      res.json(brand); //  Si existe el brand lo mandamos en la respuesta como un json.
     } else {
-      res.status(404).json([]); //   Si no existe el car se manda un json con un array vacio porque la respuesta en caso de haber tenido resultados hubiera sido un array y un mandamos un código 404.
+      res.status(404).json([]); //   Si no existe el brand se manda un json con un array vacio porque la respuesta en caso de haber tenido resultados hubiera sido un array y un mandamos un código 404.
     }
 
     // Si falla la lectura...
@@ -105,7 +97,7 @@ router.get("/brand/:brand", async (req, res) => {
 });
 
 // Ejemplo de REQ:
-// http://localhost:3000/user/name/nombre del car a buscar
+// http://localhost:3000/user/name/nombre del brand a busbrand
 
 //  ------------------------------------------------------------------------------------------
 
@@ -114,9 +106,9 @@ router.get("/brand/:brand", async (req, res) => {
 router.post("/", async (req, res) => {
   // Si funciona la escritura...
   try {
-    const car = new Car(req.body); //     Un nuevo car es un nuevo modelo de la BBDD que tiene un Scheme que valida la estructura de esos datos que recoge del body de la petición.
-    const createdCar = await car.save(); // Esperamos a que guarde el nuevo car creado en caso de que vaya bien. Con el metodo .save().
-    return res.status(201).json(createdCar); // Devolvemos un código 201 que significa que algo se ha creado y el car creado en modo json.
+    const brand = new Brand(req.body); //     Un nuevo brand es un nuevo modelo de la BBDD que tiene un Scheme que valida la estructura de esos datos que recoge del body de la petición.
+    const createdBrand = await brand.save(); // Esperamos a que guarde el nuevo brand creado en caso de que vaya bien. Con el metodo .save().
+    return res.status(201).json(createdBrand); // Devolvemos un código 201 que significa que algo se ha creado y el brand creado en modo json.
 
     // Si falla la escritura...
   } catch (error) {
@@ -124,7 +116,7 @@ router.post("/", async (req, res) => {
   }
 });
 
-/* Petición tipo de POST para añadir un nuevo car (añadimos al body el nuevo car con sus propiedades que tiene que cumplir con el Scheme de nuestro modelo) identificado por su id:
+/* Petición tipo de POST para añadir un nuevo brand (añadimos al body el nuevo brand con sus propiedades que tiene que cumplir con el Scheme de nuestro modelo) identificado por su id:
  const newUser = {firstName: "Prueba Nombre", lastName: "Prueba apellido", phone: "Prueba tlf"}
  fetch("http://localhost:3000/user/",{"body": JSON.stringify(newUser),"method":"POST","headers":{"Accept":"application/json","Content-Type":"application/json"}}).then((data)=> console.log(data)) */
 //  ------------------------------------------------------------------------------------------
@@ -134,8 +126,8 @@ router.post("/", async (req, res) => {
 router.delete("/reset", async (req, res) => {
   // Si funciona el reseteo...
   try {
-    await resetCars();
-    res.send("Datos Car reseteados");
+    await resetBrands();
+    res.send("Datos Brand reseteados");
 
     // Si falla el reseteo...
   } catch (error) {
@@ -146,15 +138,15 @@ router.delete("/reset", async (req, res) => {
 
 //  ------------------------------------------------------------------------------------------
 
-//  Endpoin para eliminar car identificado por id (CRUD: DELETE):
+//  Endpoin para eliminar brand identificado por id (CRUD: DELETE):
 
 router.delete("/:id", async (req, res) => {
   // Si funciona el borrado...
   try {
     const id = req.params.id; //  Recogemos el id de los parametros de la ruta.
-    const carDeleted = await Car.findByIdAndDelete(id); // Esperamos a que nos devuelve la info del car eliminado que busca y elimina con el metodo findByIdAndDelete(id del car a eliminar).
-    if (carDeleted) {
-      res.json(carDeleted); //  Devolvemos el car eliminado en caso de que exista con ese id.
+    const brandDeleted = await Brand.findByIdAndDelete(id); // Esperamos a que nos devuelve la info del brand eliminado que busca y elimina con el metodo findByIdAndDelete(id del brand a eliminar).
+    if (brandDeleted) {
+      res.json(brandDeleted); //  Devolvemos el brand eliminado en caso de que exista con ese id.
     } else {
       res.status(404).json({}); //  Devolvemos un código 404 y un objeto vacio en caso de que no exista con ese id.
     }
@@ -165,9 +157,9 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
-/* Petición tipo DELETE para eliminar un car (no añadimos body a la busqueda y recogemos el id de los parametros de la ruta) identificado por su id:
+/* Petición tipo DELETE para eliminar un brand (no añadimos body a la busqueda y recogemos el id de los parametros de la ruta) identificado por su id:
 
-fetch("http://localhost:3000/car/id del car a borrar",{"method":"DELETE","headers":{"Accept":"application/json","Content-Type":"application/json"}}).then((data)=> console.log(data))
+fetch("http://localhost:3000/brand/id del brand a borrar",{"method":"DELETE","headers":{"Accept":"application/json","Content-Type":"application/json"}}).then((data)=> console.log(data))
 */
 
 //  ------------------------------------------------------------------------------------------
@@ -178,9 +170,9 @@ router.put("/:id", async (req, res) => {
   // Si funciona la actualización...
   try {
     const id = req.params.id; //  Recogemos el id de los parametros de la ruta.
-    const carUpdated = await Car.findByIdAndUpdate(id, req.body, { new: true }); // Esperamos que devuelva la info del car actualizado al que tambien hemos pasado un objeto con los campos q tiene que acualizar en la req del body de la petición. {new: true} Le dice que nos mande el car actualizado no el antiguo. Lo busca y elimina con el metodo findByIdAndDelete(id del car a eliminar).
-    if (carUpdated) {
-      res.json(carUpdated); //  Devolvemos el car actualizado en caso de que exista con ese id.
+    const brandUpdated = await Brand.findByIdAndUpdate(id, req.body, { new: true }); // Esperamos que devuelva la info del brand actualizado al que tambien hemos pasado un objeto con los campos q tiene que acualizar en la req del body de la petición. {new: true} Le dice que nos mande el brand actualizado no el antiguo. Lo busca y elimina con el metodo findByIdAndDelete(id del brand a eliminar).
+    if (brandUpdated) {
+      res.json(brandUpdated); //  Devolvemos el brand actualizado en caso de que exista con ese id.
     } else {
       res.status(404).json({}); //  Devolvemos un código 404 y un objeto vacio en caso de que no exista con ese id.
     }
@@ -192,11 +184,11 @@ router.put("/:id", async (req, res) => {
 });
 
 /* Petición tipo de PUT para actualizar datos concretos (en este caso el tlf) recogidos en el body,
-de un car en concreto (recogemos el id de los parametros de la ruta ):
+de un brand en concreto (recogemos el id de los parametros de la ruta ):
 
-fetch("http://localhost:3000/user/id del car a actualizar",{"body": JSON.stringify({phone:5555}),"method":"PUT","headers":{"Accept":"application/json","Content-Type":"application/json"}}).then((data)=> console.log(data))
+fetch("http://localhost:3000/user/id del brand a actualizar",{"body": JSON.stringify({phone:5555}),"method":"PUT","headers":{"Accept":"application/json","Content-Type":"application/json"}}).then((data)=> console.log(data))
 */
 
 //  ------------------------------------------------------------------------------------------
 // Exportamos
-module.exports = { carRouter: router };
+module.exports = { brandRouter: router };

@@ -4,6 +4,7 @@ const express = require("express");
 // Importamos las userRoutes:
 const { userRouter } = require("./routes/user.routes"); //  LO IMPORTAMOS COMO UN OBJETO.
 const { carRouter } = require("./routes/car.routes"); //  LO IMPORTAMOS COMO UN OBJETO.
+const { brandRouter } = require("./routes/brand.routes"); //  LO IMPORTAMOS COMO UN OBJETO.
 
 const main = async () => {
   // Conexión a la base de datos.
@@ -29,6 +30,7 @@ const main = async () => {
   });
 
   //  Usamos las rutas (el orden es importante más restrictivos a menos):
+  server.use("/brand", brandRouter); //  Le decimos al server que utilice el brandRouter importado para gestionar las rutas que tengan "/brand".
   server.use("/car", carRouter); //  Le decimos al server que utilice el carRouter importado para gestionar las rutas que tengan "/car".
   server.use("/user", userRouter); //  Le decimos al server que utilice el userRouter importado para gestionar las rutas que tengan "/user".
   server.use("/", router); //  Decimos al server que utilice el router en la raíz.

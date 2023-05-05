@@ -2,7 +2,7 @@
 const mongoose = require("mongoose");
 
 // Conexión a la base de datos:
-const { connect } = require("./db.js"); // Importamos el archivo de conexión a la BBDD
+const { connect } = require("../db"); // Importamos el archivo de conexión a la BBDD
 
 // Importamos la función que nos sirve para resetear los car:
 const { resetCars } = require("../utils/resetCars");
