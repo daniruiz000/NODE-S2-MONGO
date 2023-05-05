@@ -85,12 +85,7 @@ router.get("/brand/:brand", async (req, res) => {
   // Si funciona la lectura...
   try {
     // const car = await car.find({ firstName: name }); //Si quisieramos realizar una busqueda exacta, tal y como está escrito.
-    const car = await Car.find({})
-      .populate({
-        path: "brand",
-        match: { name: { $regex: new RegExp("^" + brand.toLowerCase(), "i") } },
-      })
-      .populate("owner");
+    const car = await Car.find({ brand: { $regex: brand, $options: "i" } }).populate(["owner", "brand"]);
 
     if (car?.length) {
       res.json(car); //  Si existe el car lo mandamos en la respuesta como un json.
