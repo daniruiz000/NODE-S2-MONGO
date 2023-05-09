@@ -17,7 +17,7 @@ por página para no saturar al navegador (CRUD: READ):
 */
 
 router.get("/", async (req, res) => {
-  res.set("Access-Control-Allow-Origin", "http://localhost:3000/"); //  Controlamos que se pueda acceder a la API desde el dominio http://localhost:3000/
+  res.setHeader("Access-Control-Allow-Origin", "http://localhost:3000/"); //  Controlamos que se pueda acceder a la API desde el dominio http://localhost:3000/
   // Si funciona la lectura...
   try {
     // Recogemos las query params de esta manera req.query.parametro.
@@ -57,7 +57,7 @@ router.get("/", async (req, res) => {
 //  Ruta para recuperar un brand en concreto a través de su id ( modelo.findById()) (CRUD: READ):
 
 router.get("/:id", async (req, res) => {
-  res.set("Access-Control-Allow-Origin", "http://localhost:3000/");
+  res.setHeader("Access-Control-Allow-Origin", "http://localhost:3000/");
   // Si funciona la lectura...
   try {
     const id = req.params.id; //  Recogemos el id de los parametros de la ruta.
@@ -83,7 +83,7 @@ router.get("/:id", async (req, res) => {
 //  Ruta para busbrand un brand por el nombre ( modelo.findById({firstName: name})) (CRUD: Operación Custom. No es CRUD):
 
 router.get("/name/:name", async (req, res) => {
-  res.header("Access-Control-Allow-Origin", "http://localhost:3000/");
+  res.setHeader("Access-Control-Allow-Origin", "http://localhost:3000/");
   const brandName = req.params.name;
   // Si funciona la lectura...
   try {
@@ -135,7 +135,7 @@ router.post("/", async (req, res) => {
 //  Endpoint para resetear los datos ejecutando cryptos:
 
 router.delete("/reset", async (req, res) => {
-  res.set("Access-Control-Allow-Origin", "http://localhost:3000/");
+  res.setHeader("Access-Control-Allow-Origin", "http://localhost:3000/");
   // Si funciona el reseteo...
   try {
     await resetBrands();
@@ -153,7 +153,7 @@ router.delete("/reset", async (req, res) => {
 //  Endpoin para eliminar brand identificado por id (CRUD: DELETE):
 
 router.delete("/:id", async (req, res) => {
-  res.set("Access-Control-Allow-Origin", "http://localhost:3000/");
+  res.setHeader("Access-Control-Allow-Origin", "http://localhost:3000/");
   // Si funciona el borrado...
   try {
     const id = req.params.id; //  Recogemos el id de los parametros de la ruta.
@@ -181,7 +181,7 @@ fetch("http://localhost:3000/brand/id del brand a borrar",{"method":"DELETE","he
 //  Endpoin para actualizar un elemento identificado por id (CRUD: UPDATE):
 
 router.put("/:id", async (req, res) => {
-  res.set("Access-Control-Allow-Origin", "http://localhost:3000/");
+  res.setHeader("Access-Control-Allow-Origin", "http://localhost:3000/");
   // Si funciona la actualización...
   try {
     const id = req.params.id; //  Recogemos el id de los parametros de la ruta.
