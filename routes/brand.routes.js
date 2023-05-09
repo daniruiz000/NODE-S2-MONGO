@@ -17,7 +17,7 @@ por página para no saturar al navegador (CRUD: READ):
 */
 
 router.get("/", async (req, res) => {
-  res.set("Access-Control-Allow-Origin", "*"); //  Controlamos que se pueda acceder a la API desde el dominio http://localhost:3000/
+  res.set("Access-Control-Allow-Origin", "http://localhost:3000"); //  Controlamos que se pueda acceder a la API desde el dominio http://localhost:3000/
   // Si funciona la lectura...
   try {
     // Recogemos las query params de esta manera req.query.parametro.
