@@ -83,7 +83,7 @@ router.get("/:id", async (req, res) => {
 //  Ruta para busbrand un brand por el nombre ( modelo.findById({firstName: name})) (CRUD: Operación Custom. No es CRUD):
 
 router.get("/name/:name", async (req, res) => {
-  res.set("Access-Control-Allow-Origin", "http://localhost:3000/");
+  res.header("Access-Control-Allow-Origin", "http://localhost:3000/");
   const brandName = req.params.name;
   // Si funciona la lectura...
   try {
