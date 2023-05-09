@@ -13,7 +13,8 @@
     "seed:cars": "node ./seeds/car.seed.js",
     "seed:brands": "node ./seeds/brand.seed.js",
     "seed:car-relations": "node ./seeds/carRelations.seed.js",
-    "seed:all": "node ./seeds/user.seed.js && node ./seeds/car.seed.js && node ./seeds/brand.seed.js && node ./seeds/carRelations.seed.js"
+    "seed:all": "node ./seeds/user.seed.js && node ./seeds/car.seed.js && node ./seeds/brand.seed.js && node ./seeds/carRelations.seed.js",
+    "normalize:brands": "node ./normalization/brand.normalization.js"
   },
   "keywords": [],
   "author": "dani ruiz",

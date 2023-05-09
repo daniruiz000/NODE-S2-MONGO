@@ -43,6 +43,7 @@ router.get("/", async (req, res) => {
 
     // Si falla la lectura...
   } catch (error) {
+    console.error(error);
     res.status(500).json(error); //  Devolvemos un código de error 500 y el error.
   }
 });
@@ -76,6 +77,7 @@ router.get("/:id", async (req, res) => {
 
     // Si falla la lectura...
   } catch (error) {
+    console.error(error);
     res.status(500).json(error); //  Devolvemos un código de error 500 y el error.
   }
 });
@@ -101,6 +103,7 @@ router.get("/name/:name", async (req, res) => {
 
     // Si falla la lectura...
   } catch (error) {
+    console.error(error);
     res.status(500).json(error); //  Devolvemos un código de error 500 y el error.
   }
 });
@@ -121,6 +124,10 @@ router.post("/", async (req, res) => {
 
     // Si falla la escritura...
   } catch (error) {
+    console.error(error);
+    if (error?.name === "ValidationError") {
+      res.status(400).json(error);
+    }
     res.status(500).json(error); //  Devolvemos un código de error 500 si falla la escritura y el error.
   }
 });
@@ -163,6 +170,7 @@ router.delete("/:id", async (req, res) => {
 
     // Si falla el borrado...
   } catch (error) {
+    console.error(error);
     res.status(500).json(error); //  Devolvemos un código 500 de error si falla el delete y el error.
   }
 });
@@ -180,7 +188,7 @@ router.put("/:id", async (req, res) => {
   // Si funciona la actualización...
   try {
     const id = req.params.id; //  Recogemos el id de los parametros de la ruta.
-    const userUpdated = await User.findByIdAndUpdate(id, req.body, { new: true }); // Esperamos que devuelva la info del usuario actualizado al que tambien hemos pasado un objeto con los campos q tiene que acualizar en la req del body de la petición. {new: true} Le dice que nos mande el usuario actualizado no el antiguo. Lo busca y elimina con el metodo findByIdAndDelete(id del usuario a eliminar).
+    const userUpdated = await User.findByIdAndUpdate(id, req.body, { new: true, runValidators: true }); // Esperamos que devuelva la info del usuario actualizado al que tambien hemos pasado un objeto con los campos q tiene que acualizar en la req del body de la petición. {new: true} Le dice que nos mande el usuario actualizado no el antiguo. Lo busca y elimina con el metodo findByIdAndDelete(id del usuario a eliminar).
     if (userUpdated) {
       res.json(userUpdated); //  Devolvemos el usuario actualizado en caso de que exista con ese id.
     } else {
@@ -189,6 +197,10 @@ router.put("/:id", async (req, res) => {
 
     // Si falla la actualización...
   } catch (error) {
+    console.error(error);
+    if (error?.name === "ValidationError") {
+      res.status(400).json(error);
+    }
     res.status(500).json(error); //  Devolvemos un código 500 de error si falla el update y el error.
   }
 });

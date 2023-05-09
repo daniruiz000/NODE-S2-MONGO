@@ -8,8 +8,8 @@ const Schema = mongoose.Schema;
 const carSchema = new Schema(
   {
     brand: { type: mongoose.Schema.Types.ObjectId, ref: "Brand", required: false },
-    model: { type: String, required: true },
-    plate: { type: String, required: false },
+    model: { type: String, trim: true, required: true },
+    plate: { type: String, trim: true, required: false },
     power: { type: Number, required: false },
     owner: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: false }, // Identificará el id como una referencia de la entidad User relacionando las dos colecciones de la BBDD.
   },

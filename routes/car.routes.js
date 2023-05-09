@@ -43,6 +43,7 @@ router.get("/", async (req, res) => {
 
     // Si falla la lectura...
   } catch (error) {
+    console.error(error);
     res.status(500).json(error); //  Devolvemos un código de error 500 y el error.
   }
 });
@@ -68,6 +69,7 @@ router.get("/:id", async (req, res) => {
 
     // Si falla la lectura...
   } catch (error) {
+    console.error(error);
     res.status(500).json(error); //  Devolvemos un código de error 500 y el error.
   }
 });
@@ -95,6 +97,7 @@ router.get("/brand/:brand", async (req, res) => {
 
     // Si falla la lectura...
   } catch (error) {
+    console.error(error);
     res.status(500).json(error); //  Devolvemos un código de error 500 y el error.
   }
 });
@@ -115,6 +118,10 @@ router.post("/", async (req, res) => {
 
     // Si falla la escritura...
   } catch (error) {
+    console.error(error);
+    if (error?.name === "ValidationError") {
+      res.status(400).json(error);
+    }
     res.status(500).json(error); //  Devolvemos un código de error 500 si falla la escritura y el error.
   }
 });
@@ -156,6 +163,7 @@ router.delete("/:id", async (req, res) => {
 
     // Si falla el borrado...
   } catch (error) {
+    console.error(error);
     res.status(500).json(error); //  Devolvemos un código 500 de error si falla el delete y el error.
   }
 });
@@ -173,7 +181,7 @@ router.put("/:id", async (req, res) => {
   // Si funciona la actualización...
   try {
     const id = req.params.id; //  Recogemos el id de los parametros de la ruta.
-    const carUpdated = await Car.findByIdAndUpdate(id, req.body, { new: true }); // Esperamos que devuelva la info del car actualizado al que tambien hemos pasado un objeto con los campos q tiene que acualizar en la req del body de la petición. {new: true} Le dice que nos mande el car actualizado no el antiguo. Lo busca y elimina con el metodo findByIdAndDelete(id del car a eliminar).
+    const carUpdated = await Car.findByIdAndUpdate(id, req.body, { new: true, runValidators: true }); // Esperamos que devuelva la info del car actualizado al que tambien hemos pasado un objeto con los campos q tiene que acualizar en la req del body de la petición. {new: true} Le dice que nos mande el car actualizado no el antiguo. Lo busca y elimina con el metodo findByIdAndDelete(id del car a eliminar).
     if (carUpdated) {
       res.json(carUpdated); //  Devolvemos el car actualizado en caso de que exista con ese id.
     } else {
@@ -182,6 +190,7 @@ router.put("/:id", async (req, res) => {
 
     // Si falla la actualización...
   } catch (error) {
+    console.error(error);
     res.status(500).json(error); //  Devolvemos un código 500 de error si falla el update y el error.
   }
 });

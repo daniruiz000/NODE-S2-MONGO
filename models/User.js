@@ -7,14 +7,14 @@ const Schema = mongoose.Schema;
 // Creamos esquema del usuario
 const userSchema = new Schema(
   {
-    firstName: { type: String, required: true },
-    lastName: { type: String, required: true },
-    phone: { type: String, required: false },
+    firstName: { type: String, trim: true, required: true },
+    lastName: { type: String, trim: true, required: true },
+    phone: { type: String, trim: true, required: false },
     address: {
       type: {
-        street: { type: String, required: true },
+        street: { type: String, trim: true, required: true },
         number: { type: Number, required: true },
-        city: { type: String, required: true },
+        city: { type: String, trim: true, required: true },
       },
       required: false,
     },
