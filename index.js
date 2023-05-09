@@ -1,6 +1,6 @@
 // Importamos express.
 const express = require("express");
-
+const cors = require("cors");
 // Importamos las userRoutes:
 const { userRouter } = require("./routes/user.routes"); //  LO IMPORTAMOS COMO UN OBJETO.
 const { carRouter } = require("./routes/car.routes"); //  LO IMPORTAMOS COMO UN OBJETO.
@@ -16,6 +16,7 @@ const main = async () => {
   const server = express();
   server.use(express.json()); // Sepa interpretar los JSON.
   server.use(express.urlencoded({ extended: false })); //  Sepa interpretar bien los parametros de las rutas.
+  server.use(cors());
 
   //  Rutas:
   const router = express.Router(); // Definimos el router que será el encargado de manejar las peticiones a nuestras rutas.
