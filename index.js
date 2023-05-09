@@ -16,7 +16,7 @@ const main = async () => {
   const server = express();
   server.use(express.json()); // Sepa interpretar los JSON.
   server.use(express.urlencoded({ extended: false })); //  Sepa interpretar bien los parametros de las rutas.
-  server.use(cors());
+  server.use(cors({ origin: "http://localhost:3000" }));
 
   //  Rutas:
   const router = express.Router(); // Definimos el router que será el encargado de manejar las peticiones a nuestras rutas.
