@@ -110,7 +110,7 @@ router.get("/name/:name", async (req, res) => {
 //  Ruta para añadir elementos (CRUD: CREATE):
 
 router.post("/", async (req, res) => {
-  res.set("Access-Control-Allow-Origin", "http://localhost:3000");
+  res.setHeader("Access-Control-Allow-Origin", "http://localhost:3000");
   // Si funciona la escritura...
   try {
     const brand = new Brand(req.body); //     Un nuevo brand es un nuevo modelo de la BBDD que tiene un Scheme que valida la estructura de esos datos que recoge del body de la petición.
