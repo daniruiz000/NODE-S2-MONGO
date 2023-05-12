@@ -119,10 +119,11 @@ router.post("/", async (req, res) => {
     // Si falla la escritura...
   } catch (error) {
     console.error(error);
-    if (error?.name === "ValidationError") {
+    if (error.name === "ValidationError") {
       res.status(400).json(error);
+    } else {
+      res.status(500).json(error);
     }
-    res.status(500).json(error); //  Devolvemos un código de error 500 si falla la escritura y el error.
   }
 });
 
@@ -191,7 +192,11 @@ router.put("/:id", async (req, res) => {
     // Si falla la actualización...
   } catch (error) {
     console.error(error);
-    res.status(500).json(error); //  Devolvemos un código 500 de error si falla el update y el error.
+    if (error.name === "ValidationError") {
+      res.status(400).json(error);
+    } else {
+      res.status(500).json(error);
+    }
   }
 });
 
