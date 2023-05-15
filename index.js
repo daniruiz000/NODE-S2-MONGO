@@ -48,6 +48,7 @@ const main = async () => {
   app.use("/brand", brandRouter); //  Le decimos al app que utilice el brandRouter importado para gestionar las rutas que tengan "/brand".
   app.use("/car", carRouter); //  Le decimos al app que utilice el carRouter importado para gestionar las rutas que tengan "/car".
   app.use("/user", userRouter); //  Le decimos al app que utilice el userRouter importado para gestionar las rutas que tengan "/user".
+  app.use("/public", express.static("public")); //  Utilice el middleware de ficheros estaticos y busque dentro de la carpeta public para solucionar las rutas solicitadas.
   app.use("/", router); //  Decimos al app que utilice el router en la raíz.
 
   // Ejemplo de Middleware de gestión de errores.
