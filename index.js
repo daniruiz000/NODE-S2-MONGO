@@ -11,12 +11,12 @@ const main = async () => {
   const { connect } = require("./db.js"); // Importamos el archivo de conexión a la BBDD.
   const database = await connect(); //  Conectamos con la BBDD.
 
-  //  Configuración del server:
+  //  Configuración del app:
   const PORT = 3000; //  Definimos el puerto.
-  const server = express();
-  server.use(express.json()); // Sepa interpretar los JSON.
-  server.use(express.urlencoded({ extended: false })); //  Sepa interpretar bien los parametros de las rutas.
-  server.use(cors({ origin: "http://localhost:3000" }));
+  const app = express();
+  app.use(express.json()); // Sepa interpretar los JSON.
+  app.use(express.urlencoded({ extended: false })); //  Sepa interpretar bien los parametros de las rutas.
+  app.use(cors({ origin: "http://localhost:3000" }));
 
   //  Rutas:
   const router = express.Router(); // Definimos el router que será el encargado de manejar las peticiones a nuestras rutas.
@@ -30,14 +30,42 @@ const main = async () => {
     res.status(404).send("Lo sentimos :( No hemos encontrado la página requerida.");
   });
 
-  //  Usamos las rutas (el orden es importante más restrictivos a menos):
-  server.use("/brand", brandRouter); //  Le decimos al server que utilice el brandRouter importado para gestionar las rutas que tengan "/brand".
-  server.use("/car", carRouter); //  Le decimos al server que utilice el carRouter importado para gestionar las rutas que tengan "/car".
-  server.use("/user", userRouter); //  Le decimos al server que utilice el userRouter importado para gestionar las rutas que tengan "/user".
-  server.use("/", router); //  Decimos al server que utilice el router en la raíz.
+  // Middlewares de aplicación(afecta a todas las rutas):
+  // Ejemplo de Middleware de logs en consola.
+  app.use((req, res, next) => {
+    const date = new Date();
+    console.log(`Petición de tipo ${req.method} a la url ${req.originalUrl} el ${date}`);
+    next(); // Continua el código
+  });
 
-  //  Levantamos el server en el puerto indicado:
-  server.listen(PORT, () => {
+  // Acepta /car*
+  app.use("/car", (req, res, next) => {
+    console.log("Me han pedido coches.");
+    next(); // Continua el código
+  });
+
+  //  Usamos las rutas (el orden es importante más restrictivos a menos):
+  app.use("/brand", brandRouter); //  Le decimos al app que utilice el brandRouter importado para gestionar las rutas que tengan "/brand".
+  app.use("/car", carRouter); //  Le decimos al app que utilice el carRouter importado para gestionar las rutas que tengan "/car".
+  app.use("/user", userRouter); //  Le decimos al app que utilice el userRouter importado para gestionar las rutas que tengan "/user".
+  app.use("/", router); //  Decimos al app que utilice el router en la raíz.
+
+  // Ejemplo de Middleware de gestión de errores.
+  app.use((err, req, res, next) => {
+    console.log("*** INICIO DE ERROR ***");
+    console.log(`Petición fallida de tipo ${req.method} a la url ${req.originalUrl}.`);
+    console.log(err);
+    console.log("*** FIN DE ERROR ***");
+
+    if (err.name === "ValidationError") {
+      res.status(400).json(err);
+    } else {
+      res.status(500).json(err);
+    }
+  });
+
+  //  Levantamos el app en el puerto indicado:
+  app.listen(PORT, () => {
     console.log(`Server levantado en puerto ${PORT}`);
   });
 };

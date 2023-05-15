@@ -12,16 +12,39 @@ const router = express.Router();
 
 //  ------------------------------------------------------------------------------------------
 
+// Middleware previo al get de users para comprobar los parametros:
+
+router.get("/", (req, res, next) => {
+  try {
+    console.log("Estamos en el Middleware que comprueba los parámetros");
+
+    const page = req.query.page ? parseInt(req.query.page) : 1;
+    const limit = req.query.limit ? parseInt(req.query.limit) : 10;
+
+    if (!isNaN(page) && !isNaN(limit) && page > 0 && limit > 0) {
+      req.query.page = page;
+      req.query.limit = limit;
+      next();
+    } else {
+      console.log("Parametros no validos:");
+      console.log(JSON.stringify(req.query));
+      res.status(400).json({ error: "Params are not valid" });
+    }
+  } catch (error) {
+    next(error);
+  }
+});
+
+//  ------------------------------------------------------------------------------------------
+
 /*  Ruta para recuperar todos los usuarios de manera paginada en función de un limite de elementos a mostrar
 por página para no saturar al navegador (CRUD: READ):
 */
 
-router.get("/", async (req, res) => {
+router.get("/", async (req, res, next) => {
   // Si funciona la lectura...
   try {
-    // Recogemos las query params de esta manera req.query.parametro.
-    const page = parseInt(req.query.page);
-    const limit = parseInt(req.query.limit);
+    const { page, limit } = req.query;
 
     const users = await User.find() // Devolvemos los usuarios si funciona. Con modelo.find().
       .limit(limit) // La función limit se ejecuta sobre el .find() y le dice que coga un número limitado de elementos, coge desde el inicio a no ser que le añadamos...
@@ -43,8 +66,7 @@ router.get("/", async (req, res) => {
 
     // Si falla la lectura...
   } catch (error) {
-    console.error(error);
-    res.status(500).json(error); //  Devolvemos un código de error 500 y el error.
+    next(error); // Le pasamos el error al siguiente middleware de control de errores.
   }
 });
 
@@ -56,7 +78,7 @@ router.get("/", async (req, res) => {
 
 //  Ruta para recuperar un usuario en concreto a través de su id ( modelo.findById()) (CRUD: READ):
 
-router.get("/:id", async (req, res) => {
+router.get("/:id", async (req, res, next) => {
   // Si funciona la lectura...
   try {
     const id = req.params.id; //  Recogemos el id de los parametros de la ruta.
@@ -77,8 +99,7 @@ router.get("/:id", async (req, res) => {
 
     // Si falla la lectura...
   } catch (error) {
-    console.error(error);
-    res.status(500).json(error); //  Devolvemos un código de error 500 y el error.
+    next(error);
   }
 });
 

@@ -12,17 +12,40 @@ const router = express.Router();
 
 //  ------------------------------------------------------------------------------------------
 
+// Middleware previo al get de brans para comprobar los parametros:
+
+router.get("/", (req, res, next) => {
+  try {
+    console.log("Estamos en el Middleware que comprueba los parámetros");
+
+    const page = req.query.page ? parseInt(req.query.page) : 1;
+    const limit = req.query.limit ? parseInt(req.query.limit) : 10;
+
+    if (!isNaN(page) && !isNaN(limit) && page > 0 && limit > 0) {
+      req.query.page = page;
+      req.query.limit = limit;
+      next();
+    } else {
+      console.log("Parametros no validos:");
+      console.log(JSON.stringify(req.query));
+      res.status(400).json({ error: "Params are not valid" });
+    }
+  } catch (error) {
+    next(error);
+  }
+});
+
+//  ------------------------------------------------------------------------------------------
+
 /*  Ruta para recuperar todos los brands de manera paginada en función de un limite de elementos a mostrar
 por página para no saturar al navegador (CRUD: READ):
 */
 
-router.get("/", async (req, res) => {
+router.get("/", async (req, res, next) => {
   //  Controlamos que se pueda acceder a la API desde el dominio http://localhost:3000/
   // Si funciona la lectura...
   try {
-    // Recogemos las query params de esta manera req.query.parametro.
-    const page = req.query.page;
-    const limit = parseInt(req.query.limit);
+    const { page, limit } = req.query;
 
     const brands = await Brand.find() // Devolvemos los brands si funciona. Con modelo.find().
       .limit(limit) // La función limit se ejecuta sobre el .find() y le dice que coga un número limitado de elementos, coge desde el inicio a no ser que le añadamos...
@@ -43,8 +66,7 @@ router.get("/", async (req, res) => {
 
     // Si falla la lectura...
   } catch (error) {
-    console.error(error);
-    res.status(500).json(error); //  Devolvemos un código de error 500 y el error.
+    next(error);
   }
 });
 
@@ -56,7 +78,7 @@ router.get("/", async (req, res) => {
 
 //  Ruta para recuperar un brand en concreto a través de su id ( modelo.findById()) (CRUD: READ):
 
-router.get("/:id", async (req, res) => {
+router.get("/:id", async (req, res, next) => {
   // Si funciona la lectura...
   try {
     const id = req.params.id; //  Recogemos el id de los parametros de la ruta.
@@ -69,8 +91,7 @@ router.get("/:id", async (req, res) => {
 
     // Si falla la lectura...
   } catch (error) {
-    console.error(error);
-    res.status(500).json(error); //  Devolvemos un código de error 500 y el error.
+    next(error);
   }
 });
 
@@ -81,7 +102,7 @@ router.get("/:id", async (req, res) => {
 
 //  Ruta para busbrand un brand por el nombre ( modelo.findById({firstName: name})) (CRUD: Operación Custom. No es CRUD):
 
-router.get("/name/:name", async (req, res) => {
+router.get("/name/:name", async (req, res, next) => {
   const brandName = req.params.name;
   // Si funciona la lectura...
   try {
@@ -95,8 +116,7 @@ router.get("/name/:name", async (req, res) => {
 
     // Si falla la lectura...
   } catch (error) {
-    console.error(error);
-    res.status(500).json(error); //  Devolvemos un código de error 500 y el error.
+    next(error);
   }
 });
 
@@ -107,7 +127,7 @@ router.get("/name/:name", async (req, res) => {
 
 //  Ruta para añadir elementos (CRUD: CREATE):
 
-router.post("/", async (req, res) => {
+router.post("/", async (req, res, next) => {
   // Si funciona la escritura...
   try {
     const brand = new Brand(req.body); //     Un nuevo brand es un nuevo modelo de la BBDD que tiene un Scheme que valida la estructura de esos datos que recoge del body de la petición.
@@ -116,12 +136,7 @@ router.post("/", async (req, res) => {
 
     // Si falla la escritura...
   } catch (error) {
-    console.error(error);
-    if (error.name === "ValidationError") {
-      res.status(400).json(error);
-    } else {
-      res.status(500).json(error);
-    }
+    next(error);
   }
 });
 
@@ -132,7 +147,7 @@ router.post("/", async (req, res) => {
 
 //  Endpoint para resetear los datos ejecutando cryptos:
 
-router.delete("/reset", async (req, res) => {
+router.delete("/reset", async (req, res, next) => {
   // Si funciona el reseteo...
   try {
     await resetBrands();
@@ -140,8 +155,7 @@ router.delete("/reset", async (req, res) => {
 
     // Si falla el reseteo...
   } catch (error) {
-    console.error(error);
-    res.status(500).json(error); //  Devolvemos un código 500 de error si falla el reseteo de datos y el error.
+    next(error);
   }
 });
 
@@ -149,7 +163,7 @@ router.delete("/reset", async (req, res) => {
 
 //  Endpoin para eliminar brand identificado por id (CRUD: DELETE):
 
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", async (req, res, next) => {
   // Si funciona el borrado...
   try {
     const id = req.params.id; //  Recogemos el id de los parametros de la ruta.
@@ -162,8 +176,7 @@ router.delete("/:id", async (req, res) => {
 
     // Si falla el borrado...
   } catch (error) {
-    console.error(error);
-    res.status(500).json(error); //  Devolvemos un código 500 de error si falla el delete y el error.
+    next(error);
   }
 });
 
@@ -176,7 +189,7 @@ fetch("http://localhost:3000/brand/id del brand a borrar",{"method":"DELETE","he
 
 //  Endpoin para actualizar un elemento identificado por id (CRUD: UPDATE):
 
-router.put("/:id", async (req, res) => {
+router.put("/:id", async (req, res, next) => {
   // Si funciona la actualización...
   try {
     const id = req.params.id; //  Recogemos el id de los parametros de la ruta.
@@ -189,12 +202,7 @@ router.put("/:id", async (req, res) => {
 
     // Si falla la actualización...
   } catch (error) {
-    console.error(error);
-    if (error.name === "ValidationError") {
-      res.status(400).json(error);
-    } else {
-      res.status(500).json(error);
-    }
+    next(error);
   }
 });
 

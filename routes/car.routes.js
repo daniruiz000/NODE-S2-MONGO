@@ -12,17 +12,38 @@ const router = express.Router();
 
 //  ------------------------------------------------------------------------------------------
 
+// Middleware previo al get de cars para comprobar los parametros:
+
+router.get("/", async (req, res, next) => {
+  try {
+    console.log("Estamos en el Middleware que comprueba los parámetros");
+
+    const page = req.query.page ? parseInt(req.query.page) : 1;
+    const limit = req.query.limit ? parseInt(req.query.limit) : 10;
+
+    if (!isNaN(page) && !isNaN(limit) && page > 0 && limit > 0) {
+      req.query.page = page;
+      req.query.limit = limit;
+      next();
+    } else {
+      console.log("Parametros no validos:");
+      console.log(JSON.stringify(req.query));
+      res.status(400).json({ error: "Params are not valid" });
+    }
+  } catch (error) {
+    next(error);
+  }
+});
+
+//  ------------------------------------------------------------------------------------------
+
 /*  Ruta para recuperar todos los cars de manera paginada en función de un limite de elementos a mostrar
 por página para no saturar al navegador (CRUD: READ):
 */
 
-router.get("/", async (req, res) => {
-  // Si funciona la lectura...
+router.get("/", async (req, res, next) => {
   try {
-    // Recogemos las query params de esta manera req.query.parametro.
-    const page = req.query.page;
-    const limit = parseInt(req.query.limit);
-
+    const { page, limit } = req.query;
     const cars = await Car.find() // Devolvemos los cars si funciona. Con modelo.find().
       .limit(limit) // La función limit se ejecuta sobre el .find() y le dice que coga un número limitado de elementos, coge desde el inicio a no ser que le añadamos...
       .skip((page - 1) * limit) // La función skip() se ejecuta sobre el .find() y se salta un número determinado de elementos y con este cálculo podemos paginar en función del limit.
@@ -40,11 +61,8 @@ router.get("/", async (req, res) => {
     };
     // Enviamos la respuesta como un json.
     res.json(response);
-
-    // Si falla la lectura...
   } catch (error) {
-    console.error(error);
-    res.status(500).json(error); //  Devolvemos un código de error 500 y el error.
+    next(error);
   }
 });
 
@@ -56,8 +74,7 @@ router.get("/", async (req, res) => {
 
 //  Ruta para recuperar un car en concreto a través de su id ( modelo.findById()) (CRUD: READ):
 
-router.get("/:id", async (req, res) => {
-  // Si funciona la lectura...
+router.get("/:id", async (req, res, next) => {
   try {
     const id = req.params.id; //  Recogemos el id de los parametros de la ruta.
     const car = await Car.findById(id).populate(["owner", "brand"]); //  Buscamos un documentos con un id determinado dentro de nuestro modelo con modelo.findById(id a buscar).
@@ -66,41 +83,13 @@ router.get("/:id", async (req, res) => {
     } else {
       res.status(404).json({}); //    Si no existe el car se manda un json vacio y un código 400.
     }
-
-    // Si falla la lectura...
   } catch (error) {
-    console.error(error);
-    res.status(500).json(error); //  Devolvemos un código de error 500 y el error.
+    next(error);
   }
 });
 
 // Ejemplo de REQ:
 // http://localhost:3000/user/id del car a buscar
-
-//  ------------------------------------------------------------------------------------------
-
-//  Ruta para buscar un car por el nombre ( modelo.findById({firstName: name})) (CRUD: Operación Custom. No es CRUD):
-
-router.get("/brand/:brand", async (req, res) => {
-  const brand = req.params.brand;
-  console.log(brand);
-  // Si funciona la lectura...
-  try {
-    // const car = await car.find({ firstName: name }); //Si quisieramos realizar una busqueda exacta, tal y como está escrito.
-    const car = await Car.find({ brand: { $regex: brand, $options: "i" } }).populate(["owner", "brand"]);
-
-    if (car?.length) {
-      res.json(car); //  Si existe el car lo mandamos en la respuesta como un json.
-    } else {
-      res.status(404).json([]); //   Si no existe el car se manda un json con un array vacio porque la respuesta en caso de haber tenido resultados hubiera sido un array y un mandamos un código 404.
-    }
-
-    // Si falla la lectura...
-  } catch (error) {
-    console.error(error);
-    res.status(500).json(error); //  Devolvemos un código de error 500 y el error.
-  }
-});
 
 // Ejemplo de REQ:
 // http://localhost:3000/user/name/nombre del car a buscar
@@ -109,21 +98,13 @@ router.get("/brand/:brand", async (req, res) => {
 
 //  Ruta para añadir elementos (CRUD: CREATE):
 
-router.post("/", async (req, res) => {
-  // Si funciona la escritura...
+router.post("/", async (req, res, next) => {
   try {
     const car = new Car(req.body); //     Un nuevo car es un nuevo modelo de la BBDD que tiene un Scheme que valida la estructura de esos datos que recoge del body de la petición.
     const createdCar = await car.save(); // Esperamos a que guarde el nuevo car creado en caso de que vaya bien. Con el metodo .save().
-    return res.status(201).json(createdCar); // Devolvemos un código 201 que significa que algo se ha creado y el car creado en modo json.
-
-    // Si falla la escritura...
+    res.status(201).json(createdCar); // Devolvemos un código 201 que significa que algo se ha creado y el car creado en modo json.
   } catch (error) {
-    console.error(error);
-    if (error.name === "ValidationError") {
-      res.status(400).json(error);
-    } else {
-      res.status(500).json(error);
-    }
+    next(error);
   }
 });
 
@@ -134,16 +115,12 @@ router.post("/", async (req, res) => {
 
 //  Endpoint para resetear los datos ejecutando cryptos:
 
-router.delete("/reset", async (req, res) => {
-  // Si funciona el reseteo...
+router.delete("/reset", async (req, res, next) => {
   try {
     await resetCars();
     res.send("Datos Car reseteados");
-
-    // Si falla el reseteo...
   } catch (error) {
-    console.error(error);
-    res.status(500).json(error); //  Devolvemos un código 500 de error si falla el reseteo de datos y el error.
+    next(error);
   }
 });
 
@@ -151,8 +128,7 @@ router.delete("/reset", async (req, res) => {
 
 //  Endpoin para eliminar car identificado por id (CRUD: DELETE):
 
-router.delete("/:id", async (req, res) => {
-  // Si funciona el borrado...
+router.delete("/:id", async (req, res, next) => {
   try {
     const id = req.params.id; //  Recogemos el id de los parametros de la ruta.
     const carDeleted = await Car.findByIdAndDelete(id); // Esperamos a que nos devuelve la info del car eliminado que busca y elimina con el metodo findByIdAndDelete(id del car a eliminar).
@@ -161,11 +137,8 @@ router.delete("/:id", async (req, res) => {
     } else {
       res.status(404).json({}); //  Devolvemos un código 404 y un objeto vacio en caso de que no exista con ese id.
     }
-
-    // Si falla el borrado...
   } catch (error) {
-    console.error(error);
-    res.status(500).json(error); //  Devolvemos un código 500 de error si falla el delete y el error.
+    next(error);
   }
 });
 
@@ -178,8 +151,7 @@ fetch("http://localhost:3000/car/id del car a borrar",{"method":"DELETE","header
 
 //  Endpoin para actualizar un elemento identificado por id (CRUD: UPDATE):
 
-router.put("/:id", async (req, res) => {
-  // Si funciona la actualización...
+router.put("/:id", async (req, res, next) => {
   try {
     const id = req.params.id; //  Recogemos el id de los parametros de la ruta.
     const carUpdated = await Car.findByIdAndUpdate(id, req.body, { new: true, runValidators: true }); // Esperamos que devuelva la info del car actualizado al que tambien hemos pasado un objeto con los campos q tiene que acualizar en la req del body de la petición. {new: true} Le dice que nos mande el car actualizado no el antiguo. Lo busca y elimina con el metodo findByIdAndDelete(id del car a eliminar).
@@ -188,15 +160,8 @@ router.put("/:id", async (req, res) => {
     } else {
       res.status(404).json({}); //  Devolvemos un código 404 y un objeto vacio en caso de que no exista con ese id.
     }
-
-    // Si falla la actualización...
   } catch (error) {
-    console.error(error);
-    if (error.name === "ValidationError") {
-      res.status(400).json(error);
-    } else {
-      res.status(500).json(error);
-    }
+    next(error);
   }
 });
 
