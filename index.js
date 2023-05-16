@@ -1,10 +1,12 @@
 // Importamos express.
 const express = require("express");
 const cors = require("cors");
+
 // Importamos las userRoutes:
 const { userRouter } = require("./routes/user.routes"); //  LO IMPORTAMOS COMO UN OBJETO.
 const { carRouter } = require("./routes/car.routes"); //  LO IMPORTAMOS COMO UN OBJETO.
 const { brandRouter } = require("./routes/brand.routes"); //  LO IMPORTAMOS COMO UN OBJETO.
+const { fileUploadRouter } = require("./routes/fileUpload.routes");
 
 const main = async () => {
   // Conexión a la base de datos.
@@ -45,6 +47,7 @@ const main = async () => {
   });
 
   //  Usamos las rutas (el orden es importante más restrictivos a menos):
+  app.use("/file-upload", fileUploadRouter);
   app.use("/brand", brandRouter); //  Le decimos al app que utilice el brandRouter importado para gestionar las rutas que tengan "/brand".
   app.use("/car", carRouter); //  Le decimos al app que utilice el carRouter importado para gestionar las rutas que tengan "/car".
   app.use("/user", userRouter); //  Le decimos al app que utilice el userRouter importado para gestionar las rutas que tengan "/user".

@@ -6,6 +6,9 @@ const { Car } = require("../models/Car.js");
 
 // Importamos la función que nos sirve para resetear los book:
 const { resetCars } = require("../utils/resetCars.js");
+const { resetBrands } = require("../utils/resetBrands.js");
+const { resetUsers } = require("../utils/resetUsers.js");
+const { carRelations } = require("../utils/carRelations.js");
 
 // Router propio de car:
 const router = express.Router();
@@ -117,8 +120,21 @@ router.post("/", async (req, res, next) => {
 
 router.delete("/reset", async (req, res, next) => {
   try {
-    await resetCars();
-    res.send("Datos Car reseteados");
+    // La constante all recoge un boleano, si recogemos una query (all) y con valor (true), esta será true:
+    const all = req.query.all === "true";
+
+    // Si all es true resetearemos todos los datos de nuestras coleciones y las relaciones entre estas.
+    if (all) {
+      await resetBrands();
+      await resetUsers();
+      await resetCars();
+      await carRelations();
+      res.send("Datos reseteados y Relaciones reestablecidas");
+    } else {
+      await resetCars();
+      res.send("Datos Cars reseteados");
+    }
+    // Si falla el reseteo...
   } catch (error) {
     next(error);
   }

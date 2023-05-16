@@ -13,6 +13,7 @@ const brandSchema = new Schema(
     name: { type: String, trim: true, minLength: [3, " Al menos tres letras para el nombre"], maxLength: [20, "Nombre demasiado largo, máximo de 20 caracteres"], required: true }, // tim: true es un metodo de los string que permite quitarle por delamte y por detras los espacios.
     creationYear: { type: Number, min: [1803, "La marca de coches más antigua es Renault en 1803"], max: [currentYear, `Ese año es superior al año en curso que es ${currentYear}`], required: false },
     country: { type: String, trim: true, minLength: 3, maxLength: 10, enum: allowedCountries, uppercase: true, required: false },
+    logoImage: { type: String, required: false },
   },
   { timestamps: true } // Cada vez que se modifique un documento refleja la hora y fecha de modificación
 );

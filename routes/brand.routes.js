@@ -1,5 +1,9 @@
 // Importamos express:
 const express = require("express");
+const multer = require("multer");
+const fs = require("fs");
+
+const upload = multer({ dest: "public" });
 
 // Importamos el modelo que nos sirve tanto para importar datos como para leerlos:
 const { Brand } = require("../models/Brand.js");
@@ -213,5 +217,33 @@ fetch("http://localhost:3000/user/id del brand a actualizar",{"body": JSON.strin
 */
 
 //  ------------------------------------------------------------------------------------------
+//  Endpoin para asociar un logo a una brand:
+
+router.post("/logo-upload", upload.single("logo"), async (req, res, next) => {
+  try {
+    // Renombrado de la imágen
+    const originalname = req.file.originalname;
+    const path = req.file.path;
+    const newPath = path + "_" + originalname;
+    fs.renameSync(path, newPath);
+
+    // Busqueda de la marca
+    const brandId = req.body.brandId;
+    const brand = await Brand.findById(brandId);
+
+    if (brand) {
+      brand.logoImage = newPath;
+      await brand.save();
+      res.json(brand);
+      console.log("Marca modificada correctamente");
+    } else {
+      fs.unlinkSync(newPath);
+      res.status(404).send("Marca no encontrada");
+    }
+  } catch (error) {
+    next(error);
+  }
+});
+
 // Exportamos
 module.exports = { brandRouter: router };
