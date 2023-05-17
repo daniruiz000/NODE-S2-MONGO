@@ -218,10 +218,9 @@ fetch("http://localhost:3000/user/id del brand a actualizar",{"body": JSON.strin
 
 //  ------------------------------------------------------------------------------------------
 //  Endpoin para asociar un logo a una brand:
-
-router.post("/logo-upload", upload.single("file"), async (req, res, next) => {
+router.post("/logo-upload", upload.single("logo"), async (req, res, next) => {
   try {
-    // Renombrado de la imágen
+    // Renombrado de la imagen
     const originalname = req.file.originalname;
     const path = req.file.path;
     const newPath = path + "_" + originalname;
@@ -235,7 +234,8 @@ router.post("/logo-upload", upload.single("file"), async (req, res, next) => {
       brand.logoImage = newPath;
       await brand.save();
       res.json(brand);
-      console.log("Marca modificada correctamente");
+
+      console.log("Marca modificada correctamente!");
     } else {
       fs.unlinkSync(newPath);
       res.status(404).send("Marca no encontrada");
