@@ -1,223 +1,111 @@
-// Importamos express:
 const express = require("express");
-const multer = require("multer");
 const fs = require("fs");
-
+const multer = require("multer");
 const upload = multer({ dest: "public" });
 
-// Importamos el modelo que nos sirve tanto para importar datos como para leerlos:
+// Modelos
 const { Brand } = require("../models/Brand.js");
 
-// Importamos la función que nos sirve para resetear los book:
-const { resetBrands } = require("../utils/resetBrands.js");
-
-// Router propio de brand:
 const router = express.Router();
 
-//  ------------------------------------------------------------------------------------------
-
-// Middleware previo al get de brans para comprobar los parametros:
-
-router.get("/", (req, res, next) => {
+// CRUD: READ
+router.get("/", async (req, res, next) => {
   try {
-    console.log("Estamos en el Middleware que comprueba los parámetros");
-
+    // Asi leemos query params
     const page = req.query.page ? parseInt(req.query.page) : 1;
     const limit = req.query.limit ? parseInt(req.query.limit) : 10;
+    const brands = await Brand.find()
+      .limit(limit)
+      .skip((page - 1) * limit);
 
-    if (!isNaN(page) && !isNaN(limit) && page > 0 && limit > 0) {
-      req.query.page = page;
-      req.query.limit = limit;
-      next();
-    } else {
-      console.log("Parametros no validos:");
-      console.log(JSON.stringify(req.query));
-      res.status(400).json({ error: "Params are not valid" });
-    }
-  } catch (error) {
-    next(error);
-  }
-});
+    // Num total de elementos
+    const totalElements = await Brand.countDocuments();
 
-//  ------------------------------------------------------------------------------------------
-
-/*  Ruta para recuperar todos los brands de manera paginada en función de un limite de elementos a mostrar
-por página para no saturar al navegador (CRUD: READ):
-*/
-
-router.get("/", async (req, res, next) => {
-  //  Controlamos que se pueda acceder a la API desde el dominio http://localhost:3000/
-  // Si funciona la lectura...
-  try {
-    const { page, limit } = req.query;
-
-    const brands = await Brand.find() // Devolvemos los brands si funciona. Con modelo.find().
-      .limit(limit) // La función limit se ejecuta sobre el .find() y le dice que coga un número limitado de elementos, coge desde el inicio a no ser que le añadamos...
-      .skip((page - 1) * limit); // La función skip() se ejecuta sobre el .find() y se salta un número determinado de elementos y con este cálculo podemos paginar en función del limit. // Con populate le indicamos que si recoge un id en la propiedad señalada rellene con los campos de datos que contenga ese id
-    //  Creamos una respuesta más completa con info de la API y los datos solicitados por el brand:
-    const totalElements = await Brand.countDocuments(); //  Esperamos aque realice el conteo del número total de elementos con modelo.countDocuments()
-    const totalPagesByLimit = Math.ceil(totalElements / limit); // Para saber el número total de páginas que se generan en función del limit. Math.ceil() nos elimina los decimales.
-
-    // Respuesta Completa:
     const response = {
       totalItems: totalElements,
-      totalPages: totalPagesByLimit,
+      totalPages: Math.ceil(totalElements / limit),
       currentPage: page,
       data: brands,
     };
-    // Enviamos la respuesta como un json.
+
     res.json(response);
-
-    // Si falla la lectura...
   } catch (error) {
     next(error);
   }
 });
 
-/* Ejemplo de REQ indicando que queremos la página 4 estableciendo un limite de 10 elementos
- por página (limit = 10 , pages = 4):
- http://localhost:3000/user?limit=10&page=4 */
-
-//  ------------------------------------------------------------------------------------------
-
-//  Ruta para recuperar un brand en concreto a través de su id ( modelo.findById()) (CRUD: READ):
-
+// CRUD: READ
 router.get("/:id", async (req, res, next) => {
-  // Si funciona la lectura...
   try {
-    const id = req.params.id; //  Recogemos el id de los parametros de la ruta.
-    const brand = await Brand.findById(id); //  Buscamos un documentos con un id determinado dentro de nuestro modelo con modelo.findById(id a busbrand).
+    const id = req.params.id;
+    const brand = await Brand.findById(id);
     if (brand) {
-      res.json(brand); //  Si existe el brand lo mandamos como respuesta en modo json.
+      res.json(brand);
     } else {
-      res.status(404).json({}); //    Si no existe el brand se manda un json vacio y un código 400.
+      res.status(404).json({});
     }
-
-    // Si falla la lectura...
   } catch (error) {
     next(error);
   }
 });
 
-// Ejemplo de REQ:
-// http://localhost:3000/user/id del brand a busbrand
-
-//  ------------------------------------------------------------------------------------------
-
-//  Ruta para busbrand un brand por el nombre ( modelo.findById({firstName: name})) (CRUD: Operación Custom. No es CRUD):
-
+// CRUD: Operación custom, no es CRUD
 router.get("/name/:name", async (req, res, next) => {
   const brandName = req.params.name;
-  // Si funciona la lectura...
+
   try {
-    // const brand = await brand.find({ firstName: name }); //Si quisieramos realizar una busqueda exacta, tal y como está escrito.
-    const brand = await Brand.find({ name: new RegExp("^" + brandName.toLowerCase(), "i") }); //  Esperamos a que realice una busqueda en la que coincida el texto pasado por query params para la propiedad determinada pasada dentro de un objeto, porqué tenemos que pasar un objeto, sin importar mayusc o minusc.
+    const brand = await Brand.find({ name: new RegExp("^" + brandName.toLowerCase(), "i") });
     if (brand?.length) {
-      res.json(brand); //  Si existe el brand lo mandamos en la respuesta como un json.
+      res.json(brand);
     } else {
-      res.status(404).json([]); //   Si no existe el brand se manda un json con un array vacio porque la respuesta en caso de haber tenido resultados hubiera sido un array y un mandamos un código 404.
+      res.status(404).json([]);
     }
-
-    // Si falla la lectura...
   } catch (error) {
     next(error);
   }
 });
 
-// Ejemplo de REQ:
-// http://localhost:3000/user/name/nombre del brand a busbrand
-
-//  ------------------------------------------------------------------------------------------
-
-//  Ruta para añadir elementos (CRUD: CREATE):
-
+// CRUD: CREATE
 router.post("/", async (req, res, next) => {
-  // Si funciona la escritura...
   try {
-    const brand = new Brand(req.body); //     Un nuevo brand es un nuevo modelo de la BBDD que tiene un Scheme que valida la estructura de esos datos que recoge del body de la petición.
-    const createdBrand = await brand.save(); // Esperamos a que guarde el nuevo brand creado en caso de que vaya bien. Con el metodo .save().
-    return res.status(201).json(createdBrand); // Devolvemos un código 201 que significa que algo se ha creado y el brand creado en modo json.
-
-    // Si falla la escritura...
+    const brand = new Brand(req.body);
+    const createdBrand = await brand.save();
+    return res.status(201).json(createdBrand);
   } catch (error) {
     next(error);
   }
 });
 
-/* Petición tipo de POST para añadir un nuevo brand (añadimos al body el nuevo brand con sus propiedades que tiene que cumplir con el Scheme de nuestro modelo) identificado por su id:
- const newUser = {firstName: "Prueba Nombre", lastName: "Prueba apellido", phone: "Prueba tlf"}
- fetch("http://localhost:3000/user/",{"body": JSON.stringify(newUser),"method":"POST","headers":{"Accept":"application/json","Content-Type":"application/json"}}).then((data)=> console.log(data)) */
-//  ------------------------------------------------------------------------------------------
-
-//  Endpoint para resetear los datos ejecutando cryptos:
-
-router.delete("/reset", async (req, res, next) => {
-  // Si funciona el reseteo...
-  try {
-    await resetBrands();
-    res.send("Datos Brand reseteados");
-
-    // Si falla el reseteo...
-  } catch (error) {
-    next(error);
-  }
-});
-
-//  ------------------------------------------------------------------------------------------
-
-//  Endpoin para eliminar brand identificado por id (CRUD: DELETE):
-
+// CRUD: DELETE
 router.delete("/:id", async (req, res, next) => {
-  // Si funciona el borrado...
   try {
-    const id = req.params.id; //  Recogemos el id de los parametros de la ruta.
-    const brandDeleted = await Brand.findByIdAndDelete(id); // Esperamos a que nos devuelve la info del brand eliminado que busca y elimina con el metodo findByIdAndDelete(id del brand a eliminar).
+    const id = req.params.id;
+    const brandDeleted = await Brand.findByIdAndDelete(id);
     if (brandDeleted) {
-      res.json(brandDeleted); //  Devolvemos el brand eliminado en caso de que exista con ese id.
+      res.json(brandDeleted);
     } else {
-      res.status(404).json({}); //  Devolvemos un código 404 y un objeto vacio en caso de que no exista con ese id.
+      res.status(404).json({});
     }
-
-    // Si falla el borrado...
   } catch (error) {
     next(error);
   }
 });
 
-/* Petición tipo DELETE para eliminar un brand (no añadimos body a la busqueda y recogemos el id de los parametros de la ruta) identificado por su id:
-
-fetch("http://localhost:3000/brand/id del brand a borrar",{"method":"DELETE","headers":{"Accept":"application/json","Content-Type":"application/json"}}).then((data)=> console.log(data))
-*/
-
-//  ------------------------------------------------------------------------------------------
-
-//  Endpoin para actualizar un elemento identificado por id (CRUD: UPDATE):
-
+// CRUD: UPDATE
 router.put("/:id", async (req, res, next) => {
-  // Si funciona la actualización...
   try {
-    const id = req.params.id; //  Recogemos el id de los parametros de la ruta.
-    const brandUpdated = await Brand.findByIdAndUpdate(id, req.body, { new: true, runValidators: true }); // Esperamos que devuelva la info del brand actualizado al que tambien hemos pasado un objeto con los campos q tiene que acualizar en la req del body de la petición. {new: true, runValidators:true} Le dice que nos mande el brand actualizado no el antiguo y que tiene que pasar por el filtro del modelo. Lo busca y elimina con el metodo findByIdAndDelete(id del brand a eliminar).
+    const id = req.params.id;
+    const brandUpdated = await Brand.findByIdAndUpdate(id, req.body, { new: true, runValidators: true });
     if (brandUpdated) {
-      res.json(brandUpdated); //  Devolvemos el brand actualizado en caso de que exista con ese id.
+      res.json(brandUpdated);
     } else {
-      res.status(404).json({}); //  Devolvemos un código 404 y un objeto vacio en caso de que no exista con ese id.
+      res.status(404).json({});
     }
-
-    // Si falla la actualización...
   } catch (error) {
     next(error);
   }
 });
 
-/* Petición tipo de PUT para actualizar datos concretos (en este caso el tlf) recogidos en el body,
-de un brand en concreto (recogemos el id de los parametros de la ruta ):
-
-fetch("http://localhost:3000/user/id del brand a actualizar",{"body": JSON.stringify({phone:5555}),"method":"PUT","headers":{"Accept":"application/json","Content-Type":"application/json"}}).then((data)=> console.log(data))
-*/
-
-//  ------------------------------------------------------------------------------------------
-//  Endpoint para asociar un logo a una brand:
 router.post("/logo-upload", upload.single("logo"), async (req, res, next) => {
   try {
     // Renombrado de la imagen
@@ -245,5 +133,4 @@ router.post("/logo-upload", upload.single("logo"), async (req, res, next) => {
   }
 });
 
-// Exportamos
 module.exports = { brandRouter: router };
