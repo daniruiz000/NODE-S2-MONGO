@@ -13,6 +13,8 @@ const userList = [
       number: 176,
       city: "Simi Valley",
     },
+    email: "noah@gmail.com",
+    password: "noa45678",
   },
   {
     firstName: "Harvey",
@@ -23,6 +25,8 @@ const userList = [
       number: 76,
       city: "Leesburg",
     },
+    email: "harvey@gmail.com",
+    password: "har45678",
   },
   {
     firstName: "Todd",
@@ -33,6 +37,8 @@ const userList = [
       number: 17,
       city: "London",
     },
+    email: "todd@gmail.com",
+    password: "tod45678",
   },
   {
     firstName: "Luis",
@@ -43,6 +49,8 @@ const userList = [
       number: 145,
       city: "Macon-Bibb County",
     },
+    email: "luis@gmail.com",
+    password: "lui45678",
   },
   {
     firstName: "Teri",
@@ -53,6 +61,8 @@ const userList = [
       number: 136,
       city: "Palm Desert",
     },
+    email: "teri@gmail.com",
+    password: "ter45678",
   },
 ];
 
@@ -62,7 +72,11 @@ const resetUsers = async () => {
     await connect();
     await User.collection.drop(); //  Esperamos a que borre los documentos de la collección users de la BBDD.
     console.log("Borrados users");
-    await User.insertMany(userList); //  Esperamos a que inserte los nuevos documentos creados en la colección user de la BBDD.
+    const documents = userList.map((user) => new User(user));
+    for (let i = 0; i < documents.length; i++) {
+      const document = documents[i];
+      await document.save();
+    }
     console.log("Creados users correctamente");
   } catch (error) {
     //  Si hay error lanzamos el error por consola.

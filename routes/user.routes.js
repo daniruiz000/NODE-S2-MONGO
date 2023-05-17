@@ -1,9 +1,17 @@
 // Importamos express:
 const express = require("express");
 
+// Importamos bcrypt:
+const bcrypt = require("bcrypt");
+
+const { generateToken } = require("../utils/token");
+
+const { isAuth } = require("../middlewares/author.middleware");
+
 // Importamos el modelo que nos sirve tanto para importar datos como para leerlos:
 const { User } = require("../models/User.js");
 const { Car } = require("../models/Car.js");
+
 // Importamos la función que nos sirve para resetear los book:
 const { resetUsers } = require("../utils/resetUsers.js");
 
@@ -82,7 +90,7 @@ router.get("/:id", async (req, res, next) => {
   // Si funciona la lectura...
   try {
     const id = req.params.id; //  Recogemos el id de los parametros de la ruta.
-    const user = await User.findById(id); //  Buscamos un documentos con un id determinado dentro de nuestro modelo con modelo.findById(id a buscar).
+    const user = await User.findById(id).select("+password -firstName"); //  Buscamos un documentos con un id determinado dentro de nuestro modelo con modelo.findById(id a buscar).
 
     if (user) {
       const temporalUser = user.toObject(); // Creamos un suario temporal que recibira sólo los datos que nos interesan del usuario que exista con ese id. Recibo sólo los datos que nos interesan con toObject().
@@ -110,7 +118,7 @@ router.get("/:id", async (req, res, next) => {
 
 //  Ruta para buscar un usuario por el nombre ( modelo.findById({firstName: name})) (CRUD: Operación Custom. No es CRUD):
 
-router.get("/name/:name", async (req, res) => {
+router.get("/name/:name", async (req, res, next) => {
   const name = req.params.name;
   // Si funciona la lectura...
   try {
@@ -124,8 +132,7 @@ router.get("/name/:name", async (req, res) => {
 
     // Si falla la lectura...
   } catch (error) {
-    console.error(error);
-    res.status(500).json(error); //  Devolvemos un código de error 500 y el error.
+    next(error);
   }
 });
 
@@ -136,7 +143,7 @@ router.get("/name/:name", async (req, res) => {
 
 //  Ruta para añadir elementos (CRUD: CREATE):
 
-router.post("/", async (req, res) => {
+router.post("/", async (req, res, next) => {
   // Si funciona la escritura...
   try {
     const user = new User(req.body); // Un nuevo usuario es un nuevo modelo de la BBDD que tiene un Scheme que valida la estructura de esos datos que recoge del body de la petición.
@@ -145,12 +152,7 @@ router.post("/", async (req, res) => {
 
     // Si falla la escritura...
   } catch (error) {
-    console.error(error);
-    if (error.name === "ValidationError") {
-      res.status(400).json(error);
-    } else {
-      res.status(500).json(error);
-    }
+    next(error);
   }
 });
 
@@ -162,7 +164,7 @@ router.post("/", async (req, res) => {
 
 //  Endpoint para resetear los datos ejecutando cryptos:
 
-router.delete("/reset", async (req, res) => {
+router.delete("/reset", async (req, res, next) => {
   // Si funciona el reseteo...
   try {
     await resetUsers();
@@ -170,8 +172,7 @@ router.delete("/reset", async (req, res) => {
 
     // Si falla el reseteo...
   } catch (error) {
-    console.error(error);
-    res.status(500).json(error); //  Devolvemos un código 500 de error si falla el reseteo de datos y el error.
+    next(error);
   }
 });
 
@@ -179,10 +180,15 @@ router.delete("/reset", async (req, res) => {
 
 //  Endpoin para eliminar usuario identificado por id (CRUD: DELETE):
 
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", isAuth, async (req, res, next) => {
   // Si funciona el borrado...
   try {
     const id = req.params.id; //  Recogemos el id de los parametros de la ruta.
+
+    if (req.user.id !== id && req.user.email !== "admin@gmail.com") {
+      return res.status(401).json({ error: "No tienes autorización para realizar esta operación" });
+    }
+
     const userDeleted = await User.findByIdAndDelete(id); // Esperamos a que nos devuelve la info del usuario eliminado que busca y elimina con el metodo findByIdAndDelete(id del usuario a eliminar).
     if (userDeleted) {
       res.json(userDeleted); //  Devolvemos el usuario eliminado en caso de que exista con ese id.
@@ -192,8 +198,7 @@ router.delete("/:id", async (req, res) => {
 
     // Si falla el borrado...
   } catch (error) {
-    console.error(error);
-    res.status(500).json(error); //  Devolvemos un código 500 de error si falla el delete y el error.
+    next(error);
   }
 });
 
@@ -206,25 +211,30 @@ fetch("http://localhost:3000/user/id del usuario a borrar",{"method":"DELETE","h
 
 //  Endpoin para actualizar un elemento identificado por id (CRUD: UPDATE):
 
-router.put("/:id", async (req, res) => {
+router.put("/:id", isAuth, async (req, res, next) => {
   // Si funciona la actualización...
   try {
     const id = req.params.id; //  Recogemos el id de los parametros de la ruta.
-    const userUpdated = await User.findByIdAndUpdate(id, req.body, { new: true, runValidators: true }); // Esperamos que devuelva la info del usuario actualizado al que tambien hemos pasado un objeto con los campos q tiene que acualizar en la req del body de la petición. {new: true} Le dice que nos mande el usuario actualizado no el antiguo. Lo busca y elimina con el metodo findByIdAndDelete(id del usuario a eliminar).
+
+    if (req.user.id !== id && req.user.email !== "admin@gmail.com") {
+      return res.status(401).json({ error: "No tienes autorización para realizar esta operación" });
+    }
+
+    const userUpdated = await User.findById(id);
     if (userUpdated) {
-      res.json(userUpdated); //  Devolvemos el usuario actualizado en caso de que exista con ese id.
+      Object.assign(userUpdated, req.body); //  Al userUpdate le pasamos las propiedades que vengan de req.body
+      await userUpdated.save(); // Guardamos el usuario actualizado
+      //  Quitamos password de la respuesta
+      const userToSend = userUpdated.toObject();
+      delete userToSend.password;
+      res.json(userToSend); //  Devolvemos el usuario actualizado en caso de que exista con ese id.
     } else {
       res.status(404).json({}); //  Devolvemos un código 404 y un objeto vacio en caso de que no exista con ese id.
     }
 
     // Si falla la actualización...
   } catch (error) {
-    console.error(error);
-    if (error.name === "ValidationError") {
-      res.status(400).json(error);
-    } else {
-      res.status(500).json(error);
-    }
+    next(error);
   }
 });
 
@@ -235,5 +245,44 @@ fetch("http://localhost:3000/user/id del usuario a actualizar",{"body": JSON.str
 */
 
 //  ------------------------------------------------------------------------------------------
+
+//  Endpoint para login de usuarios:
+
+router.post("/login", async (req, res, next) => {
+  // Si funciona la escritura...
+  try {
+    const { email, password } = req.body; // Recoge email y password del body de la req
+    // Comprobamos que nos mandan el email y el usuario.
+    if (!email || !password) {
+      return res.status(400).json({ error: "Se deben especificar los campos email y password" }); // Un return dentro de luna función hace que esa función no continue.
+    }
+    // Comprobamos que existe el usuario
+    const user = await User.findOne({ email }).select("+password"); // Le decimos que nos muestre la propiedad password que por defecto en el modelo viene con select: false.
+    if (!user) {
+      return res.status(401).json({ error: "Email y/o password incorrectos" });
+    }
+    // Comprobamos que la password que nos envian se corresponde con la que tiene el usuario.
+    const match = bcrypt.compare(password, user.password); // compara el password encriptado con la password enviada sin encriptar.
+    if (match) {
+      // Quitamos password de la respuesta.
+      const userWithoutPass = user.toObject(); // Nos devuelve esta entidad pero modificable.
+      delete userWithoutPass.password; // delete elimina la propiedad de un objeto.
+
+      // Generamos token jwt
+      const jwtToken = generateToken(user._id, user.email);
+
+      return res.status(200).json({ token: jwtToken });
+    } else {
+      return res.status(401).json({ error: "Email y/o password incorrectos" }); // Código 401 para no autorizado
+    }
+
+    // Si falla la escritura...
+  } catch (error) {
+    next(error);
+  }
+});
+
+//  ------------------------------------------------------------------------------------------
+
 // Exportamos
 module.exports = { userRouter: router };

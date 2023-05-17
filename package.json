@@ -14,7 +14,8 @@
     "seed:brands": "node ./seeds/brand.seed.js",
     "seed:car-relations": "node ./seeds/carRelations.seed.js",
     "seed:all": "node ./seeds/user.seed.js && node ./seeds/car.seed.js && node ./seeds/brand.seed.js && node ./seeds/carRelations.seed.js",
-    "normalize:brands": "node ./normalization/brand.normalization.js"
+    "normalize:brands": "node ./normalization/brand.normalization.js",
+    "normalize:users": "node ./normalization/user.normalization.js"
   },
   "keywords": [],
   "author": "dani ruiz",
@@ -29,11 +30,14 @@
     "husky": "^8.0.0"
   },
   "dependencies": {
+    "bcrypt": "^5.1.0",
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.0",
     "mongoose": "^7.0.4",
     "multer": "^1.4.5-lts.1",
-    "nodemon": "^2.0.22"
+    "nodemon": "^2.0.22",
+    "validator": "^13.9.0"
   }
 }
