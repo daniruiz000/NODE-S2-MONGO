@@ -178,7 +178,7 @@ router.delete("/reset", async (req, res, next) => {
 
 //  ------------------------------------------------------------------------------------------
 
-//  Endpoin para eliminar usuario identificado por id (CRUD: DELETE):
+//  Endpoint para eliminar usuario identificado por id (CRUD: DELETE):
 
 router.delete("/:id", isAuth, async (req, res, next) => {
   // Si funciona el borrado...
